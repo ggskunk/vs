@@ -33,6 +33,8 @@ VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range]
 
 Exemples:
 
+Windows:
+
 ./VanitySearch.exe -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40
 
 		[keyspace]  range=2^40
@@ -52,6 +54,11 @@ Exemples:
 		[keyspace]  range=2^41
 		[keyspace]  start=3BA89530000000000
 		[keyspace]    end=3BA8954FFFFFFFFFF
+
+
+Linux
+
+./vanitysearch -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40
 
 ```
 # License
