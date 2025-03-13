@@ -21,7 +21,7 @@ VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range]
  -o outputfile: Output results to the specified file
  -gpuId: GPU to use, default is 0
  -start start Private Key HEX
- -range bit range dimension. start -> (start + 2^range).
+ -range bit range dimension. start -> (start + 2^range)
 
 ```
 
