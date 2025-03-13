@@ -17,11 +17,17 @@
 VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range]
 
  -v: Print version
+ 
  -i inputfile: Get list of addresses to search from specified file
+ 
  -o outputfile: Output results to the specified file
+ 
  -gpuId: GPU to use, default is 0
+ 
  -start start Private Key HEX
+ 
  -range bit range dimension. start -> (start + 2^range)
+ 
 
 ```
 
