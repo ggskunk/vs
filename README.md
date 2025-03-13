@@ -29,28 +29,30 @@ VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range]
  -range bit range dimension. start -> (start + 2^range)
  
 
-```
+
 
 Exemples:
 
 Windows:
 
+```
 ./VanitySearch.exe -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40
+```
 
 		[keyspace]  range=2^40
 		[keyspace]  start=3BA89530000000000
 		[keyspace]    end=3BA8953FFFFFFFFFF
 
-
+```
 ./VanitySearch.exe -gpuId 1 -o output.txt -start 3BA89530000000000 -range 42 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ
-
+```
 		[keyspace]  range=2^42
 		[keyspace]  start=3BA89530000000000
 		[keyspace]    end=3BA8956FFFFFFFFFF
 
-
+```
 ./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ 
-
+```
 		[keyspace]  range=2^41
 		[keyspace]  start=3BA89530000000000
 		[keyspace]    end=3BA8954FFFFFFFFFF
@@ -58,8 +60,9 @@ Windows:
 
 Linux
 
+```
 ./vanitysearch -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40
-
+```
 ```
 # License
 
