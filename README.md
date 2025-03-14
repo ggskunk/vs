@@ -1,4 +1,4 @@
-# VanitySearch-Bitrack with FixedPaul Optimization for BTC Puzzle
+# VanitySearch-Bitrack with FixedPaul with Optimization for BTC Puzzle
 
 # Feature
 
@@ -17,37 +17,34 @@
 VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range]
 
  -v: Print version
+ 
  -i inputfile: Get list of addresses to search from specified file
+ 
  -o outputfile: Output results to the specified file
+ 
  -gpuId: GPU to use, default is 0
+ 
  -start start Private Key HEX
- -range bit range dimension. start -> (start + 2^range).
+ 
+ -range bit range dimension. start -> (start + 2^range)
+ 
 
-```
+# Exemples:
 
-Exemples:
-
-./VanitySearch.exe -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40
-
-		[keyspace]  range=2^40
-		[keyspace]  start=3BA89530000000000
-		[keyspace]    end=3BA8953FFFFFFFFFF
+Windows:
 
 
-./VanitySearch.exe -gpuId 1 -o output.txt -start 3BA89530000000000 -range 42 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ
+```./VanitySearch.exe -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40```
 
-		[keyspace]  range=2^42
-		[keyspace]  start=3BA89530000000000
-		[keyspace]    end=3BA8956FFFFFFFFFF
+```./VanitySearch.exe -gpuId 1 -o output.txt -start 3BA89530000000000 -range 42 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ```
+
+```./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ ```
+
+Linux
+
+```./vanitysearch -gpuId 0 -i input.txt -o output.txt -start 3BA89530000000000 -range 40```
 
 
-./VanitySearch.exe -gpuId 0 -start 3BA89530000000000 -range 41 1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ 
-
-		[keyspace]  range=2^41
-		[keyspace]  start=3BA89530000000000
-		[keyspace]    end=3BA8954FFFFFFFFFF
-
-```
 # License
 
 VanitySearch is licensed under GPLv3.
