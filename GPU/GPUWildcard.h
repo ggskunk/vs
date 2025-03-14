@@ -19,7 +19,7 @@
 // Wildcard matcher
 // ---------------------------------------------------------------------------------
 
-__device__ __noinline__ bool _Match(const char *str, const char *pattern) {
+__device__  bool _Match(const char *str, const char *pattern) {
 
   const char *s;
   const char *p;

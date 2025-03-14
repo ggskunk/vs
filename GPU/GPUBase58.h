@@ -32,7 +32,7 @@
 //  47,48,49,50,51,52,53,54, 55,56,57,-1,-1,-1,-1,-1,
 //};
 //
-//__device__ __noinline__ void _GetAddress(int type,uint32_t *hash,char *b58Add) {
+//__device__  void _GetAddress(int type,uint32_t *hash,char *b58Add) {
 //
 //  uint32_t addBytes[16];
 //  uint32_t s[16];

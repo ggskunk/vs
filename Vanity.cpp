@@ -979,8 +979,6 @@ void VanitySearch::PrintStats(uint64_t keys_n, uint64_t keys_n_prev, double ttot
 	Perc.Div(&keycount);
 
 
-	
-
 	if (ttot > tprev) {
 		speed = (keys_n - keys_n_prev) / (ttot - tprev) / 1000000.0; // speed in Mkey/s
 	}

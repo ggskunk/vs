@@ -25,7 +25,7 @@
 
 
 
-__device__ __noinline__ void CheckPoint(uint32_t *_h, int32_t incr, address_t *address, uint32_t *lookup32, uint32_t *out) {
+__device__  void CheckPoint(uint32_t *_h, int32_t incr, address_t *address, uint32_t *lookup32, uint32_t *out) {
 
   uint32_t   off;
   addressl_t  l32;
