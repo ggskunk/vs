@@ -15,6 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define WIN64
+
 
 #include <sstream> 
 #include "Timer.h"
@@ -26,6 +28,66 @@
 #include <stdexcept>
 #include "hash/sha512.h"
 #include "hash/sha256.h"
+#include <thread>
+#include <atomic>
+
+#if defined(_WIN32) || defined(_WIN64)
+#include <conio.h> // For _kbhit and _getch on Windows
+#else
+#include <termios.h>
+#include <unistd.h>
+#endif
+
+std::atomic<bool> pause(false);
+std::atomic<bool> paused(false);
+int idxcount;
+double t_paused;
+
+#if defined(_WIN32) || defined(_WIN64)
+void monitorKeypress() {
+	while (true) {
+		Timer::SleepMillis(1);
+		if (_kbhit()) { // Check if a key is pressed
+			char ch = _getch(); // Get the pressed key
+			if (ch == 'p' || ch == 'P') {
+				pause = !(pause);
+				//printf("\nPAUSE PRESSED\n");
+				//break;
+			}
+		}
+	}
+}
+#else
+void setTerminalRawMode(bool enable) {
+	static struct termios oldt, newt;
+	if (enable) {
+		tcgetattr(STDIN_FILENO, &oldt); // Get current terminal settings
+		newt = oldt;
+		newt.c_lflag &= ~(ICANON | ECHO); // Disable canonical mode and echo
+		tcsetattr(STDIN_FILENO, TCSANOW, &newt); // Apply the new settings
+	}
+	else {
+		tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Restore old settings
+	}
+}
+
+void monitorKeypress() {
+	setTerminalRawMode(true);
+	while (true) {
+		Timer::SleepMillis(1);
+		char ch;
+		if (read(STDIN_FILENO, &ch, 1) > 0) { // Non-blocking read
+			if (ch == 'p' || ch == 'P') {
+				pause = !(pause);
+				/*printf("\nPAUSE PRESSED\n");
+				break;*/
+			}
+		}
+	}
+	setTerminalRawMode(false);
+}
+#endif
+
 
 #define RELEASE "2.00 by FixedPaul"
 
@@ -45,6 +107,7 @@ void printUsage() {
 	exit(-1);
 
 }
+
 
 int getInt(string name, char* v) {
 
@@ -437,6 +500,8 @@ void reconstructAdd(Secp256K1* secp, string fileName, string outputFile, string 
 
 int main(int argc, char* argv[]) {
 
+	std::thread inputThread(monitorKeypress);
+
 	// Global Init
 	Timer::Init();
 
@@ -559,8 +624,23 @@ int main(int argc, char* argv[]) {
 		fprintf(stdout, "[keyspace]    end=%s\n", bc->ksFinish.GetBase16().c_str());
 		fflush(stdout);
 
+
+		idxcount = 0;
+		t_paused = 0;
+		pause = false;
+	repeat:
+		paused = false;
 		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc);
 		v->Search(gpuId, gridSize);
+
+		while (paused) {
+			Timer::SleepMillis(100);
+			if (!pause) {
+				fprintf(stdout, "\nResuming...\n");
+				goto repeat;
+				
+			}
+		}
 	}
 
 	return 0;

@@ -28,13 +28,14 @@
 #include <math.h>
 #include <algorithm>
 #include <thread>
+#include <atomic>
 
-#define GRP_SIZE 256
+//#define GRP_SIZE 256
 
 using namespace std;
 
-Point Gn[GRP_SIZE / 2];
-Point _2Gn;
+//Point Gn[GRP_SIZE / 2];
+//Point _2Gn;
 
 VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses, int searchMode,
 	bool stop, string outputFile, uint32_t maxFound, BITCRACK_PARAM* bc):inputAddresses(inputAddresses) 
@@ -149,17 +150,17 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 		fprintf(stdout, "Search: %d addresses (Lookup size %d,[%d,%d]) [%s]\n", nbAddress, unique_sAddress, minI, maxI, searchInfo.c_str());
 	}
 
-	// Compute Generator table G[n] = (n+1)*G
-	Point g = secp->G;
-	Gn[0] = g;
-	g = secp->DoubleDirect(g);
-	Gn[1] = g;
-	for (int i = 2; i < GRP_SIZE / 2; i++) {
-		g = secp->AddDirect(g, secp->G);
-		Gn[i] = g;
-	}
-	// _2Gn = CPU_GRP_SIZE*G
-	_2Gn = secp->DoubleDirect(Gn[GRP_SIZE / 2 - 1]);
+	//// Compute Generator table G[n] = (n+1)*G
+	//Point g = secp->G;
+	//Gn[0] = g;
+	//g = secp->DoubleDirect(g);
+	//Gn[1] = g;
+	//for (int i = 2; i < GRP_SIZE / 2; i++) {
+	//	g = secp->AddDirect(g, secp->G);
+	//	Gn[i] = g;
+	//}
+	//// _2Gn = CPU_GRP_SIZE*G
+	//_2Gn = secp->DoubleDirect(Gn[GRP_SIZE / 2 - 1]);
 
 	// Constant for endomorphism
 	// if a is a nth primitive root of unity, a^-1 is also a nth primitive root.
@@ -664,7 +665,7 @@ void VanitySearch::checkAddressesSSE(bool compressed, Int key, int i, Point p1, 
 		checkAddr(pr3, h3, key, i + 3, 0, compressed);	
 }
 
-void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int groupSize, int nbThread, Point *p) {
+void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int groupSize, int nbThread, Point *p, uint64_t Progress) {
 		
 	int grp_startkeys = nbThread/256;
 
@@ -691,7 +692,7 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 
 	kStart.Set(&stepThread);
 	kStart.Mult(grp_startkeys / 2);
-	kStart.Add(groupSize / 2);
+	kStart.Add(groupSize / 2 + Progress);
 
 	P_start = secp->ComputePublicKey(&kStart);
 
@@ -719,8 +720,8 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 	subp = new Int[grp_startkeys / 2 + 1];
 	dx = new Int[grp_startkeys / 2 + 1];
 
-	int j;
-	int i;
+	uint32_t j;
+	uint32_t i;
 
 	for (i = grp_startkeys / 2; i < nbThread; i += grp_startkeys) {
 
@@ -826,6 +827,8 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 
 void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 
+	
+
 	bool ok = true;
 
 	double t0;
@@ -841,13 +844,11 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 	int STEP_SIZE = g.GetStepSize();
 	Point* publicKeys = new Point[numThreadsGPU];
 	vector<ITEM> found;
-	int idxcount = 0;
 
 	fprintf(stdout, "GPU: %s\n", g.deviceName.c_str());
 	fflush(stdout);
 
-	counters[thId] = 0;	
-	idxcount = 0;
+	counters[thId] = 0;
 	
 	g.SetSearchMode(searchMode);
 	g.SetSearchType(searchType);	
@@ -866,10 +867,11 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 
 	Int privkey;
 	Int part_key;
+	Int keycount;
 
 	t0 = Timer::get_tick();
 
-	getGPUStartingKeys(bc->ksStart, bc->ksFinish, g.GetGroupSize(), numThreadsGPU, publicKeys);
+	getGPUStartingKeys(bc->ksStart, bc->ksFinish, g.GetGroupSize(), numThreadsGPU, publicKeys, (uint64_t)(1ULL * idxcount * g.GetStepSize()));
 	ok = g.SetKeys(publicKeys);
 	delete[] publicKeys;
 
@@ -887,36 +889,47 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 
 	endOfSearch = false;
 
-	while (ok && !endOfSearch) {		
+	while (ok && !endOfSearch) {
+
+		if (!pause) {
+
+			ok = g.Launch(found, true);
+			idxcount += 1;
+
+			ttot = Timer::get_tick() - t0 + t_paused;
+
+			keycount.SetInt32(idxcount - 1);
+			keycount.Mult(STEP_SIZE);
+
+			for (int i = 0; i < (int)found.size() && !endOfSearch; i++) {
+
+				ITEM it = found[i];
+				part_key.Set(&stepThread);
+				part_key.Mult(it.thId);
+
+				privkey.Set(&bc->ksStart);
+				privkey.Add(&part_key);
+				privkey.Add(&keycount);
 			
-		ok = g.Launch(found, true);
+				checkAddr(*(address_t*)(it.hash), it.hash, privkey, it.incr, it.endo, it.mode);
+			}
 
-		idxcount += 1;
+			keycount.Add(STEP_SIZE);
+			keycount.Mult(numThreadsGPU);
 
-		ttot = Timer::get_tick() - t0;
+			keys_n = 1ULL * STEP_SIZE * numThreadsGPU;
+			keys_n = keys_n * idxcount;
 
-		Int keycount;
-		keycount.SetInt32(idxcount - 1);
-		keycount.Mult(STEP_SIZE);
+		} else {
+			printf("Pausing...\r");
+			fflush(stdout);
 
-		for (int i = 0; i < (int)found.size() && !endOfSearch; i++) {
+			g.FreeGPUEngine();
 
-			ITEM it = found[i];
-			part_key.Set(&stepThread);
-			part_key.Mult(it.thId);
-
-			privkey.Set(&bc->ksStart);
-			privkey.Add(&part_key);
-			privkey.Add(&keycount);
-			
-			checkAddr(*(address_t*)(it.hash), it.hash, privkey, it.incr, it.endo, it.mode);
+			paused = true;
+			t_paused = ttot;
 		}
-
-		keycount.Add(STEP_SIZE);
-		keycount.Mult(numThreadsGPU);
-
-		keys_n = 1ULL * STEP_SIZE * numThreadsGPU;
-		keys_n = keys_n * idxcount;	
+		
 
 		PrintStats(keys_n, keys_n_prev, ttot, tprev, taskSize, keycount);
 
@@ -937,12 +950,15 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 
 			endOfSearch = true;
 
+			
+
 		}
 
 		keys_n_prev = keys_n;
-		tprev = ttot;
+		tprev = ttot ;
 
 	}
+
 
 	endOfSearch = true;
 
@@ -988,12 +1004,24 @@ void VanitySearch::PrintStats(uint64_t keys_n, uint64_t keys_n_prev, double ttot
 	int s_end = static_cast<int32_t>(end_tt) % 60;
 	int d_end = static_cast<int32_t>(end_tt * 10) % 10;
 
-	if (h_end>=0)
-		printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: %02d:%02d:%02d.%01d - Found: %d   \r",
-			speed, log_keys, perc, h_run, m_run, s_run, d_run, h_end, m_end, s_end, d_end, nbFoundKey);
-	else
-		printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: Too much bro - Found: %d   \r",
-			speed, log_keys, perc, h_run, m_run, s_run, d_run, nbFoundKey);
+	if (!paused) {
+
+		if (h_end>=0)
+			printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: %02d:%02d:%02d.%01d - Found: %d",
+				speed, log_keys, perc, h_run, m_run, s_run, d_run, h_end, m_end, s_end, d_end, nbFoundKey);
+		else
+			printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: Too much bro - Found: %d",
+				speed, log_keys, perc, h_run, m_run, s_run, d_run, nbFoundKey);
+	} else {
+		printf("Paused - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: %02d:%02d:%02d.%01d - Found: %d",
+		log_keys, perc, h_run, m_run, s_run, d_run, h_end, m_end, s_end, d_end, nbFoundKey);
+
+		endOfSearch = true;
+    }
+
+
+	printf("\r");
+
 
 	fflush(stdout);
 }
@@ -1078,8 +1106,6 @@ void VanitySearch::Search(std::vector<int> gpuId, std::vector<int> gridSize) {
 		
 		threads[i] = std::thread(_FindKeyGPU, params + i);
 	}
-
-
 
 	while (!hasStarted(params)) {
 		Timer::SleepMillis(500);
