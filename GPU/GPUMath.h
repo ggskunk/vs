@@ -772,7 +772,7 @@ __device__ uint64_t AddCh(uint64_t r[5], uint64_t a[5], uint64_t carry) {
 
 }
 
-__device__  void _ModInv(uint64_t* R) {
+__device__ __noinline__ void _ModInv(uint64_t* R) {
 
     // Compute modular inverse of R mop P (using 320bits signed integer)
     // 0 < this < P  , P must be odd

@@ -77,7 +77,7 @@ int _ConvertSMVer2Cores(int major, int minor) {
 
 
 #define GRP_SIZE 1024
-#define STEP_SIZE GRP_SIZE
+#define STEP_SIZE GRP_SIZE*1
 
 __global__ void comp_keys(address_t* sAddress, uint32_t* lookup32, uint64_t* keys, uint32_t* out) {
 
@@ -109,6 +109,7 @@ __global__ void comp_keys(address_t* sAddress, uint32_t* lookup32, uint64_t* key
 
     uint32_t i;
 
+    // Check starting point
     odd_py = sy[0] & 1;
     _GetHash160Comp(sx, odd_py, (uint8_t*)h);
     CheckPoint(h, GRP_SIZE / 2, sAddress, lookup32, out);
@@ -235,14 +236,12 @@ GPUEngine::GPUEngine(int gpuId, uint32_t maxFound) {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, gpuId);
 
-
-                                                                     //////////////////  GRID SIZE ////////////////
-    NB_TRHEAD_PER_GROUP = 256;     //must be power of 2                                  
+    NB_TRHEAD_PER_GROUP = 256;                                          //////////////////  GRID SIZE ////////////////
     int nbThreadGroup = deviceProp.multiProcessorCount * 128;
-                                                                     //////////////////  GRID SIZE ////////////////
+
 
     uint64_t powerOfTwo = 1;
-    while (powerOfTwo <= nbThreadGroup) {  //  GET THE CLOSEST POWER OF 2 
+    while (powerOfTwo <= nbThreadGroup) {  //  GET THE CLOSEST POWER OF 2
         powerOfTwo <<= 1;
     }
 
@@ -381,9 +380,6 @@ GPUEngine::~GPUEngine() {
 
 
 void GPUEngine::PrintCudaInfo() {
-
-    cudaError_t err;
-
 
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
@@ -702,8 +698,6 @@ void GPUEngine::FreeGPUEngine() {  //free gpu for Pause function
     if (err != cudaSuccess) {
         printf("GPUEngine: Error freeing memory: %s\n", cudaGetErrorString(err));
     }
-
-    cudaDeviceReset();
 
 }
 
