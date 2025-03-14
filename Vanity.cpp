@@ -891,12 +891,12 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 
 	while (ok && !endOfSearch) {
 
-		if (!pause) {
+		if (!Pause) {
 
 			ok = g.Launch(found, true);
 			idxcount += 1;
 
-			ttot = Timer::get_tick() - t0 + t_paused;
+			ttot = Timer::get_tick() - t0 + t_Paused;
 
 			keycount.SetInt32(idxcount - 1);
 			keycount.Mult(STEP_SIZE);
@@ -926,8 +926,8 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 
 			g.FreeGPUEngine();
 
-			paused = true;
-			t_paused = ttot;
+			Paused = true;
+			t_Paused = ttot;
 		}
 		
 
@@ -1004,16 +1004,16 @@ void VanitySearch::PrintStats(uint64_t keys_n, uint64_t keys_n_prev, double ttot
 	int s_end = static_cast<int32_t>(end_tt) % 60;
 	int d_end = static_cast<int32_t>(end_tt * 10) % 10;
 
-	if (!paused) {
+	if (!Paused) {
 
 		if (h_end>=0)
-			printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: %02d:%02d:%02d.%01d - Found: %d",
+			printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: %02d:%02d:%02d.%01d - Found: %d     ",
 				speed, log_keys, perc, h_run, m_run, s_run, d_run, h_end, m_end, s_end, d_end, nbFoundKey);
 		else
-			printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: Too much bro - Found: %d",
+			printf("%.1f MK/s - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: Too much bro - Found: %d     ",
 				speed, log_keys, perc, h_run, m_run, s_run, d_run, nbFoundKey);
 	} else {
-		printf("Paused - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: %02d:%02d:%02d.%01d - Found: %d",
+		printf("Paused - 2^%.2f [%.2f%%] - RUN: %02d:%02d:%02d.%01d|END: %02d:%02d:%02d.%01d - Found: %d     ",
 		log_keys, perc, h_run, m_run, s_run, d_run, h_end, m_end, s_end, d_end, nbFoundKey);
 
 		endOfSearch = true;

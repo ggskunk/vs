@@ -673,7 +673,7 @@ std::string toHex(unsigned char* data, int length) {
 
 
 
-void GPUEngine::FreeGPUEngine() {  //free gpu for pause function
+void GPUEngine::FreeGPUEngine() {  //free gpu for Pause function
 
     // Ensure all operations have completed before freeing memory
     cudaDeviceSynchronize();

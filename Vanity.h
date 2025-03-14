@@ -27,10 +27,10 @@
 #include <Windows.h>
 #endif
 
-extern std::atomic<bool> pause;
-extern std::atomic<bool> paused;
+extern std::atomic<bool> Pause;
+extern std::atomic<bool> Paused;
 extern int idxcount;
-extern double t_paused;
+extern double t_Paused;
 
 class VanitySearch;
 

@@ -15,8 +15,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define WIN64
-
 
 #include <sstream> 
 #include "Timer.h"
@@ -38,10 +36,10 @@
 #include <unistd.h>
 #endif
 
-std::atomic<bool> pause(false);
-std::atomic<bool> paused(false);
+std::atomic<bool> Pause(false);
+std::atomic<bool> Paused(false);
 int idxcount;
-double t_paused;
+double t_Paused;
 
 #if defined(_WIN32) || defined(_WIN64)
 void monitorKeypress() {
@@ -50,8 +48,8 @@ void monitorKeypress() {
 		if (_kbhit()) { // Check if a key is pressed
 			char ch = _getch(); // Get the pressed key
 			if (ch == 'p' || ch == 'P') {
-				pause = !(pause);
-				//printf("\nPAUSE PRESSED\n");
+				Pause = !(Pause);
+				//printf("\nPause PRESSED\n");
 				//break;
 			}
 		}
@@ -78,8 +76,8 @@ void monitorKeypress() {
 		char ch;
 		if (read(STDIN_FILENO, &ch, 1) > 0) { // Non-blocking read
 			if (ch == 'p' || ch == 'P') {
-				pause = !(pause);
-				/*printf("\nPAUSE PRESSED\n");
+				Pause = !(Pause);
+				/*printf("\nPause PRESSED\n");
 				break;*/
 			}
 		}
@@ -626,16 +624,16 @@ int main(int argc, char* argv[]) {
 
 
 		idxcount = 0;
-		t_paused = 0;
-		pause = false;
+		t_Paused = 0;
+		Pause = false;
 	repeat:
-		paused = false;
+		Paused = false;
 		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc);
 		v->Search(gpuId, gridSize);
 
-		while (paused) {
+		while (Paused) {
 			Timer::SleepMillis(100);
-			if (!pause) {
+			if (!Pause) {
 				fprintf(stdout, "\nResuming...\n");
 				goto repeat;
 				
