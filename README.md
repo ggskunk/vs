@@ -9,6 +9,7 @@
   <li>Easier definition of the range to scan by defining it as a power of 2</li>
   <li>Only 1 GPU allowed for better efficiency</li>
   <li>Only compressed legacy addresses</li>
+  <li>NEW: Pressing "p" it is possibile to pause vanitysearch freeing the GPU, press again "p" to resume.</li>
 </ul>
 
 # Usage
