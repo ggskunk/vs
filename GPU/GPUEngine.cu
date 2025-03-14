@@ -699,6 +699,8 @@ void GPUEngine::FreeGPUEngine() {  //free gpu for Pause function
         printf("GPUEngine: Error freeing memory: %s\n", cudaGetErrorString(err));
     }
 
+    cudaDeviceReset();
+
 }
 
 
