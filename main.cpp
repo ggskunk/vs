@@ -34,16 +34,18 @@
 #else
 #include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
 #endif
 
 std::atomic<bool> Pause(false);
 std::atomic<bool> Paused(false);
+std::atomic<bool> stopMonitorKey(false);
 int idxcount;
 double t_Paused;
 
 #if defined(_WIN32) || defined(_WIN64)
 void monitorKeypress() {
-	while (true) {
+	while (!stopMonitorKey) {
 		Timer::SleepMillis(1);
 		if (_kbhit()) { // Check if a key is pressed
 			char ch = _getch(); // Get the pressed key
@@ -69,19 +71,31 @@ void setTerminalRawMode(bool enable) {
 	}
 }
 
+void setNonBlockingInput(bool enable) {
+	int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+	if (enable) {
+		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); // Modalità non bloccante
+	}
+	else {
+		fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK); // Ripristina modalità bloccante
+	}
+}
+
 void monitorKeypress() {
 	setTerminalRawMode(true);
-	while (true) {
+	setNonBlockingInput(true);  // Imposta stdin in modalità non bloccante
+
+	while (!stopMonitorKey) {
 		Timer::SleepMillis(1);
 		char ch;
-		if (read(STDIN_FILENO, &ch, 1) > 0) { // Non-blocking read
+		if (read(STDIN_FILENO, &ch, 1) > 0) { // Ora non blocca
 			if (ch == 'p' || ch == 'P') {
-				Pause = !(Pause);
-				/*printf("\nPause PRESSED\n");
-				break;*/
+				Pause = !Pause;
 			}
 		}
 	}
+
+	setNonBlockingInput(false);  // Ripristina modalità normale
 	setTerminalRawMode(false);
 }
 #endif
@@ -615,7 +629,6 @@ int main(int argc, char* argv[]) {
 
 
 	{
-		checkKeySpace(bc, maxKey);
 
 		fprintf(stdout, "[keyspace]  range=2^%d\n", range);
 		fprintf(stdout, "[keyspace]  start=%s\n", bc->ksStart.GetBase16().c_str());
@@ -626,7 +639,7 @@ int main(int argc, char* argv[]) {
 		idxcount = 0;
 		t_Paused = 0;
 		Pause = false;
-	repeat:
+	repeatP:
 		Paused = false;
 		VanitySearch* v = new VanitySearch(secp, address, searchMode, stop, outputFile, maxFound, bc);
 		v->Search(gpuId, gridSize);
@@ -635,10 +648,18 @@ int main(int argc, char* argv[]) {
 			Timer::SleepMillis(100);
 			if (!Pause) {
 				fprintf(stdout, "\nResuming...\n");
-				goto repeat;
+				goto repeatP;
 				
 			}
 		}
+	}
+
+	stopMonitorKey = true;
+
+	Timer::SleepMillis(100);
+
+	if (inputThread.joinable()) {
+		inputThread.join();  // Attende che il thread termini
 	}
 
 	return 0;

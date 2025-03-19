@@ -960,9 +960,11 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 	}
 
 
-	endOfSearch = true;
+	
 
 	ph->isRunning = false;
+
+	endOfSearch = true;
 }
 
 
@@ -1113,9 +1115,11 @@ void VanitySearch::Search(std::vector<int> gpuId, std::vector<int> gridSize) {
 		Timer::SleepMillis(100);
 	}
 
+	
 	if (params != nullptr) {
 		free(params);
 	}
+
 }
 
 string VanitySearch::GetHex(vector<unsigned char> &buffer) {
