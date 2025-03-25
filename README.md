@@ -1,4 +1,4 @@
-# VanitySearch-Bitrack with FixedPaul with Optimization for BTC Puzzle
+# VanitySearch-Bitrack with FixedPaul Optimization for BTC Puzzle
 
 # Feature
 
