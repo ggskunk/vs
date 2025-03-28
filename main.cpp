@@ -578,6 +578,11 @@ int main(int argc, char* argv[]) {
 			a++;
 			parseFile(string(argv[a]), address);
 			a++;
+
+		}
+		else if (strcmp(argv[a], "-stop") == 0) {
+			stop = true;
+			a++;
 		}
 		else if (strcmp(argv[a], "-range") == 0) {
 			a++;
@@ -589,6 +594,7 @@ int main(int argc, char* argv[]) {
 			maxFound = getInt("maxFound", argv[a]);
 			a++;
 		}
+
 		else if (a == argc - 1) {
 			address.push_back(string(argv[a]));
 			a++;

@@ -738,6 +738,8 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 	kStart.Mult(grp_startkeys / 2);
 	kStart.Add(groupSize / 2 + Progress);
 
+	
+
 	P_start = secp->ComputePublicKey(&kStart);
 
 	p[grp_startkeys / 2] = secp->ComputePublicKey(&tRangeStart);
@@ -749,6 +751,8 @@ void VanitySearch::getGPUStartingKeys(Int& tRangeStart, Int& tRangeEnd, int grou
 	p_delta = new Point[grp_startkeys / 2];
 
 	key_delta.Set(&stepThread);
+
+	
 
 	p_delta[0] = secp->ComputePublicKey(&key_delta);
 	key_delta.Add(&stepThread);
