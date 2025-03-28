@@ -64,6 +64,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 		fprintf(stdout, "[Building lookup16   0.0%%]\r");
 
 	nbAddress = 0;
+	onlyFull = true;
 
 	for (int i = 0; i < (int)inputAddresses.size(); i++) 
 	{
@@ -91,7 +92,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 				}
 				(*addresses[p].items).push_back(itAddresses[j]);
 			}
-			
+			onlyFull &= it.isFull;
 			nbAddress++;
 		}
 
@@ -114,8 +115,10 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 	uint32_t maxI = 0;
 	for (int i = 0; i < (int)addresses.size(); i++) 
 	{
+		
 		if (addresses[i].items) 
 		{
+			
 			LADDRESS lit;
 			lit.sAddress = i;
 			if (addresses[i].items) 
@@ -123,6 +126,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 				for (int j = 0; j < (int)addresses[i].items->size(); j++) 
 				{
 					lit.lAddresses.push_back((*addresses[i].items)[j].lAddress);
+					
 				}
 			}
 
@@ -141,13 +145,16 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputAddresses,
 		fprintf(stdout, "\n");
 	
 	string searchInfo = string(searchModes[searchMode]);
-	if (nbAddress == 1) 
-	{		
-		fprintf(stdout, "Search: %s [%s]\n", inputAddresses[0].c_str(), searchInfo.c_str());
+	if (nbAddress < 10) 
+	{	
+		for (int i = 0; i < nbAddress; i++)
+		{
+			fprintf(stdout, "Search: %s [%s]\n", inputAddresses[i].c_str(), searchInfo.c_str());
+		}
 	}
 	else 
 	{		
-		fprintf(stdout, "Search: %d addresses (Lookup size %d,[%d,%d]) [%s]\n", nbAddress, unique_sAddress, minI, maxI, searchInfo.c_str());
+		fprintf(stdout, "Search: %d (Lookup size %d,[%d,%d]) [%s]\n", nbAddress, unique_sAddress, minI, maxI, searchInfo.c_str());
 	}
 
 	//// Compute Generator table G[n] = (n+1)*G
@@ -419,37 +426,38 @@ void VanitySearch::output(string addr, string pAddr, string pAddrHex, std::strin
 		}
 	}
 
-	fprintf(f, "\nPublic Addr: %s\n", addr.c_str());	
+
+
+
+	if (f != stdout)
+		fprintf(f, "\nPublic Addr: %s\n", addr.c_str());	
 	fprintf(stdout, "\nPublic Addr: %s\n", addr.c_str());
-	//fprintf(stderr, "\nPublic Addr: %s\n", addr.c_str());
 
 	switch (searchType) {
 	case P2PKH:
-		fprintf(f, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
+		if (f != stdout)
+			fprintf(f, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
 		fprintf(stdout, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
-		//fprintf(stderr, "Priv (WIF): p2pkh:%s\n", pAddr.c_str());
 		break;
 	case P2SH:
-		fprintf(f, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
+		if (f != stdout)
+			fprintf(f, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
 		fprintf(stdout, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
-		//fprintf(stderr, "Priv (WIF): p2wpkh-p2sh:%s\n", pAddr.c_str());
 		break;
 	case BECH32:
-		fprintf(f, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
+		if (f != stdout)
+			fprintf(f, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
 		fprintf(stdout, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
-		//fprintf(stderr, "Priv (WIF): p2wpkh:%s\n", pAddr.c_str());
 		break;
 	}
 
-	fprintf(f, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());	
+	if (f != stdout)
+		fprintf(f, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());	
 	fprintf(stdout, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());
 	fprintf(stdout, "\n");
-	//fprintf(stderr, "Priv (HEX): 0x%064s\n", pAddrHex.c_str());
 
-	//fprintf(f, "PubK (HEX): 0x%s\n", pubKey.c_str());
-	//fprintf(stdout, "PubK (HEX): 0x%s\n", pubKey.c_str());
-
-	fflush(f);
+	if (f != stdout)
+		fflush(f);
 	fflush(stdout);
 	//fflush(stderr);	
 
@@ -592,23 +600,59 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 	
 	vector<ADDRESS_ITEM>* pi = addresses[prefIdx].items;	
 
-	// Full addresses
-	for (int i = 0; i < (int)pi->size(); i++) {
 
-		if (stopWhenFound && *((*pi)[i].found))
-			continue;
+	if (onlyFull) {
 
-		if (ripemd160_comp_hash((*pi)[i].hash160, hash160)) {
+		// Full addresses
+		for (int i = 0; i < (int)pi->size(); i++) {
 
-			// Found it !
-			*((*pi)[i].found) = true;
-			// You believe it ?
-			if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
-				nbFoundKey++;
-				updateFound();
+			if (stopWhenFound && *((*pi)[i].found))
+				continue;
+
+			if (ripemd160_comp_hash((*pi)[i].hash160, hash160)) {
+
+				// Found it !
+				*((*pi)[i].found) = true;
+				// You believe it ?
+				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
+					nbFoundKey++;
+					updateFound();
+				}
+
 			}
+
 		}
-	}	
+
+	}
+	else {
+		char a[64];
+
+		string addr = secp->GetAddress(searchType, mode, hash160);
+
+		for (int i = 0; i < (int)pi->size(); i++) {
+
+			if (stopWhenFound && *((*pi)[i].found))
+				continue;
+
+			strncpy(a, addr.c_str(), (*pi)[i].addressLength);
+			a[(*pi)[i].addressLength] = 0;
+
+			if (strcmp((*pi)[i].address, a) == 0) {
+
+				// Found it !
+				*((*pi)[i].found) = true;
+				if (checkPrivKey(addr, key, incr, endomorphism, mode)) {
+					nbFoundKey++;
+					updateFound();
+				}
+
+			}
+
+		}
+
+	}
+
+
 }
 
 #ifdef WIN64
@@ -851,8 +895,13 @@ void VanitySearch::FindKeyGPU(TH_PARAM* ph) {
 	counters[thId] = 0;
 	
 	g.SetSearchMode(searchMode);
-	g.SetSearchType(searchType);	
-	g.SetAddress(usedAddressL, nbAddress);
+	g.SetSearchType(searchType);
+	if (onlyFull) {
+		g.SetAddress(usedAddressL, nbAddress);
+	}
+	else {
+		g.SetAddress(usedAddress);
+	}
 
 	Int stepThread;
 	Int taskSize;

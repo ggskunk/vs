@@ -101,7 +101,7 @@ void monitorKeypress() {
 #endif
 
 
-#define RELEASE "2.00 by FixedPaul"
+#define RELEASE "2.01 by FixedPaul"
 
 using namespace std;
 
@@ -109,13 +109,14 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range]\n \n");
+	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
 	printf(" -gpuId: GPU to use, default is 0\n");
 	printf(" -start start Private Key HEX\n");
 	printf(" -range bit range dimension. start -> (start + 2^range).\n");
+	printf(" -m: Max number of prefixes found by each kernel call, default is 262144 (use multiple of 65536)\n");
 	exit(-1);
 
 }
@@ -536,7 +537,7 @@ int main(int argc, char* argv[]) {
 	vector<int> gridSize;
 	vector<string> address;
 	string outputFile = "";
-	uint32_t maxFound = 65536;
+	uint32_t maxFound = 65536*4;
 	int range = 30;
 	string start = "0";
 	
@@ -581,6 +582,11 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[a], "-range") == 0) {
 			a++;
 			range = (uint64_t)getInt("range", argv[a]);
+			a++;
+		}
+		else if (strcmp(argv[a], "-m") == 0) {
+			a++;
+			maxFound = getInt("maxFound", argv[a]);
 			a++;
 		}
 		else if (a == argc - 1) {
@@ -659,7 +665,7 @@ int main(int argc, char* argv[]) {
 	Timer::SleepMillis(100);
 
 	if (inputThread.joinable()) {
-		inputThread.join();  // Attende che il thread termini
+		inputThread.join();
 	}
 
 	return 0;

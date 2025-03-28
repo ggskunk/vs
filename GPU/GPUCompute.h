@@ -44,34 +44,41 @@ __device__ __noinline__ void CheckPoint(uint32_t *_h, int32_t incr, address_t *a
 
     if (hit) {
 
-      if (lookup32) {
-        off = lookup32[pr0];
-        l32 = _h[0];
-        st = off;
-        ed = off + hit - 1;
-        while (st <= ed) {
-          mi = (st + ed) / 2;
-          lmi = lookup32[mi];
-          if (l32 < lmi) {
-            ed = mi - 1;
-          } else if (l32 == lmi) {
-              pos = atomicAdd(out, 1);
-              uint32_t   tid = (blockIdx.x * blockDim.x) + threadIdx.x;
-              out[pos * ITEM_SIZE32 + 1] = tid;
-              out[pos * ITEM_SIZE32 + 2] = (uint32_t)(incr << 16) | (uint32_t)(1 << 15);
-              out[pos * ITEM_SIZE32 + 3] = _h[0];
-              out[pos * ITEM_SIZE32 + 4] = _h[1];
-              out[pos * ITEM_SIZE32 + 5] = _h[2];
-              out[pos * ITEM_SIZE32 + 6] = _h[3];
-              out[pos * ITEM_SIZE32 + 7] = _h[4];
-              break;
-          } else {
-            st = mi + 1;
-          }
+        if (lookup32) {
+            off = lookup32[pr0];
+            l32 = _h[0];
+            st = off;
+            ed = off + hit - 1;
+            while (st <= ed) {
+                mi = (st + ed) / 2;
+                lmi = lookup32[mi];
+                if (l32 < lmi) {
+                    ed = mi - 1;
+                }
+                else if (l32 == lmi) {
+                    // found
+                    goto addItem;
+                }
+                else {
+                    st = mi + 1;
+                }
+            }
+            return;
         }
-        return;
-      }
 
+    addItem:
+
+        pos = atomicAdd(out, 1);
+        //if (pos < maxFound) {
+            uint32_t   tid = (blockIdx.x * blockDim.x) + threadIdx.x;
+            out[pos * ITEM_SIZE32 + 1] = tid;
+            out[pos * ITEM_SIZE32 + 2] = (uint32_t)(incr << 16) | (uint32_t)(1 << 15);
+            out[pos * ITEM_SIZE32 + 3] = _h[0];
+            out[pos * ITEM_SIZE32 + 4] = _h[1];
+            out[pos * ITEM_SIZE32 + 5] = _h[2];
+            out[pos * ITEM_SIZE32 + 6] = _h[3];
+            out[pos * ITEM_SIZE32 + 7] = _h[4];
+        //}
 
     }
 

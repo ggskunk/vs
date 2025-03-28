@@ -140,6 +140,7 @@ private:
 	uint32_t nbAddress;
 	std::string outputFile;
 	bool useSSE;
+	bool onlyFull;
 	uint32_t maxFound;	
 	std::vector<ADDRESS_TABLE_ITEM> addresses;
 	std::vector<address_t> usedAddress;

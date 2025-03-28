@@ -628,7 +628,7 @@ bool GPUEngine::Launch(std::vector<ITEM>& addressFound, bool spinWait) {
     if (nbFound > maxFound) {
       // address has been lost
       if (!lostWarning) {
-        printf("\nWarning, %d items lost\nHint: Search with less addresses, less threads (-g) or increase maxFound (-m)\n", (nbFound - maxFound));
+        printf("\nWarning, %d items lost\nHint: Search with less addresses/prefixes or increase maxFound (-m) using multiple of 65536\n", (nbFound - maxFound));
         lostWarning = true;
       }
       nbFound = maxFound;
@@ -648,7 +648,6 @@ bool GPUEngine::Launch(std::vector<ITEM>& addressFound, bool spinWait) {
         it.hash = (uint8_t*)(itemPtr + 2);
         addressFound.push_back(it);
     }
-    
 
     return callKernel();
 
