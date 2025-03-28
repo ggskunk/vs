@@ -109,7 +109,7 @@ using namespace std;
 
 void printUsage() {
 
-	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m]\n \n");
+	printf("VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop]\n \n");
 	printf(" -v: Print version\n");
 	printf(" -i inputfile: Get list of addresses to search from specified file\n");
 	printf(" -o outputfile: Output results to the specified file\n");
@@ -117,6 +117,7 @@ void printUsage() {
 	printf(" -start start Private Key HEX\n");
 	printf(" -range bit range dimension. start -> (start + 2^range).\n");
 	printf(" -m: Max number of prefixes found by each kernel call, default is 262144 (use multiple of 65536)\n");
+	printf(" -stop: Stop when all prefixes are found\n");
 	exit(-1);
 
 }

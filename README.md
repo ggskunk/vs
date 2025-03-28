@@ -16,7 +16,7 @@
 # Usage
 
 
-VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m]
+VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] [-m] [-stop]
 
  -v: Print version
  
@@ -31,6 +31,8 @@ VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] 
  -range bit range dimension. start -> (start + 2^range)
 
  -m: Max number of prefixes found by each kernel call, default is 262144 (use multiples of 65536)
+
+ -stop: Stop when all prefixes are found
 
 
 If you want to search for multiple addresses or prefixes, insert them into the input file.
