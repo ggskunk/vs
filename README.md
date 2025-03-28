@@ -33,6 +33,8 @@ VanitySeacrh [-v] [-gpuId] [-i inputfile] [-o outputfile] [-start HEX] [-range] 
  -m: Max number of prefixes found by each kernel call, default is 262144 (use multiples of 65536)
 
 
+If you want to search for multiple addresses or prefixes, insert them into the input file.
+
 Be careful, if you are looking for multiple prefixes, it may be necessary to increase MaxFound using "-m". Use multiples of 65536. The speed might decrease slightly.
  
 
